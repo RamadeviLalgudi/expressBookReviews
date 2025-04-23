@@ -6,7 +6,6 @@ const public_users = express.Router();
 
 // Check if a user with the given username already exists
 const doesExist = (username) => {
-    //return isValid(username);
     
     // Filter the users array for any user with the same username
     let userswithsamename = users.filter((user) => {
@@ -21,14 +20,6 @@ const doesExist = (username) => {
     
 }
 
-const authenticatedUser = (username,password)=>{ //returns boolean
-    //write code to check if username and password match the one we have in records.
-        const authenticatedUsers = users.filter((user) => {
-            user.username === username && user.password === password
-        });
-      return (authenticatedUsers.length > 0);
-    
-    }
 public_users.post("/register", (req,res) => {
   //Write your code here
     const username = req.body.username;
@@ -49,7 +40,7 @@ public_users.post("/register", (req,res) => {
     return res.status(404).json({message: "Unable to register user."});
   //return res.status(300).json({message: "Yet to be implemented"});
 });
-
+//comment from here to test promise callback function
 // Get the book list available in the shop
 public_users.get('/',function (req, res) {
   //Write your code here
@@ -113,36 +104,103 @@ public_users.get('/review/:isbn',function (req, res) {
   res.send(books[isbn].reviews);
   //return res.status(300).json({message: "Yet to be implemented"});
 });
-/*
-//only registered users can login
-public_users.post("/login", (req,res) => {
-    //Write your code here
-    //console.log("login: ", req.body);
-      const username = req.body.username;
-      const password = req.body.password;
-      
-      // Check if username or password is missing
-      if (!username || !password) {
-          return res.status(404).json({ message: "Error logging in" });
-      }
+
+//comment till here to test promise callback function
+
+
+
+// Using Promise callbacks  function 
+
+// Task 10 
+
+function getAllBooks() {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve(books);
+      }, 3000);
   
-      // Authenticate user
-      if (authenticatedUser(username, password)) {
-          // Generate JWT access token
-          let accessToken = jwt.sign({
-              data: password
-          }, 'access', { expiresIn: 60 * 60 });
+      return;
+    });
+}
   
-          // Store access token and username in session
-          req.session.authorization = {
-              accessToken, username
+  // Get the book list available in the shop
+public_users.get('/',function (req, res) {
+    getAllBooks().then(
+      (bk)=>res.send("Task 10"+ "\n"  + JSON.stringify(bk, null, 4)),
+      (error) => res.send("denied")
+    );  
+});
+  
+
+  // Task 11
+  
+  function getBookByISBN(isbn) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const book = books[isbn];
+        if (!book) {
+          reject("Book not found");
+        }
+        resolve(book);
+      }, 3000);
+    });
+  }
+  
+  public_users.get('/isbn/:isbn',function (req, res) {
+    const isbn = req.params.isbn;
+    getBookByISBN(isbn).then(
+      (bk)=>res.send("Task 11"+ "\n"  + JSON.stringify(bk, null, 4)),
+      (error) => res.send(error)
+    )
+   });
+
+  // Task 12
+  function getBookByAuthor(author) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const booksByAuthor = [];
+        for (const key in books) {
+          if (books[key].author === author) {
+            booksByAuthor.push(books[key]);
           }
-          return res.status(200).send("User successfully logged in");
-      } else {
-          return res.status(208).json({ message: "Invalid Login. Check username and password" });
-      }
+        }
+        if (booksByAuthor.length === 0) {
+          reject("Book not found");
+        }
+        resolve(booksByAuthor);
+      }, 3000);
+    });
+  }
   
-    //return res.status(300).json({message: "Yet to be implemented"});
+  public_users.get('/author/:author',function (req, res) {
+    const author = req.params.author;
+    getBookByAuthor(author)
+    .then(
+      result =>res.send("Task 12"+ "\n"  + JSON.stringify(result, null, 4))
+    );
   });
-*/
+
+// Task 13
+function getBookByTitle(title) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        for (const key in books) {
+          if (books[key].title === title) {
+            resolve(books[key]);
+          }
+        }
+        reject("Book not found");
+      }, 3000);
+    });
+  }
+
+  public_users.get('/title/:title',function (req, res) {
+    const title = req.params.title;
+    getBookByTitle(title)
+    .then(
+      result =>res.send("Task 13"+ "\n" + JSON.stringify(result, null, 4))
+    );
+  });
+  
+
 module.exports.general = public_users;
